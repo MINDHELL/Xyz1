@@ -37,38 +37,28 @@ async def send_random_video(client, chat_id):
         return
 
     random_video = random.choice(video_docs)
-    await client.forward_messages(chat_id=chat_id, from_chat_id=CHANNEL_ID, message_ids=random_video["message_id"])
+    
+    # ✅ Now using `forward_messages()` instead of `get_chat_history()`
+    await client.forward_messages(
+        chat_id=chat_id,
+        from_chat_id=CHANNEL_ID,
+        message_ids=random_video["message_id"]
+    )
 
-# 🔹 Command: `/index` (Indexes videos from the channel)
+# 🔹 Command: `/index` (Indexes videos via message links)
 @bot.on_message(filters.command("index") & filters.user(OWNER_ID))
 async def index_videos(client, message):
-    await message.reply_text("🔄 Ensuring the bot has met the channel...")
+    await message.reply_text("🔄 Indexing videos...")
 
-    try:
-        # ✅ Force the bot to "meet" the channel before indexing
-        chat_info = await client.get_chat(CHANNEL_ID)
-        await message.reply_text(f"✅ Bot has successfully met: {chat_info.title}")
-
-    except Exception as e:
-        await message.reply_text(f"❌ The bot hasn't met the channel! Fix it first.\n`{str(e)}`")
-        return
-
-    await message.reply_text("✅ Now indexing videos...")
-
-    indexed_count = 0
-    async for msg in client.get_chat_history(CHANNEL_ID, limit=1000):
+    async for msg in client.search_messages(CHANNEL_ID, filter="video"):
         if msg.video:
             collection.update_one(
                 {"message_id": msg.message_id},
                 {"$set": {"message_id": msg.message_id}},
                 upsert=True
             )
-            indexed_count += 1
-
-    if indexed_count > 0:
-        await message.reply_text(f"✅ Indexing completed! {indexed_count} videos added.")
-    else:
-        await message.reply_text("⚠ No videos found in the channel. Make sure the bot has access!")
+    
+    await message.reply_text(f"✅ Indexing completed!")
 
 # 🔹 Command: `/start`
 @bot.on_message(filters.command("start"))
