@@ -1,18 +1,22 @@
+import os
 import random
 import logging
 import threading
-import os
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pymongo import MongoClient
-from health_check import start_health_check
+from health_check import start_health_check  # ✅ Health check support
 
-# ✅ Load environment variables
+# ✅ Set minimum channel ID to avoid Peer ID issues
+import pyrogram.utils
+pyrogram.utils.MIN_CHANNEL_ID = -1009147483647
+
+# ✅ Environment Variables
 API_ID = int(os.getenv("API_ID", "27788368"))
-API_HASH = os.getenv("API_HASH", "9df7e9ef3d7e4145270045e5e43e1081")
+API_HASH = os.getenv("API_HASH", "9df7e9ef3d7e4145270045e5e43e1081"))
 BOT_TOKEN = os.getenv("BOT_TOKEN", "7725707727:AAFtx6Sy-q6GgB9eaPoN2-oYPx2D6hjnc1g")
 MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://aarshhub:6L1PAPikOnAIHIRA@cluster0.6shiu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-CHANNEL_ID = os.getenv("CHANNEL_ID", "-1002492623985")  # 🔹 Keep it as a string
+CHANNEL_ID = int(os.getenv("CHANNEL_ID", "-1002492623985"))
 OWNER_ID = int(os.getenv("OWNER_ID", "6860316927"))
 
 # ✅ Initialize bot & database
@@ -21,10 +25,11 @@ mongo = MongoClient(MONGO_URL)
 db = mongo["VideoBot"]
 collection = db["videos"]
 
+# ✅ Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ✅ Function to send a random video
+# 🔹 Function to fetch and send a random video
 async def send_random_video(client, chat_id):
     video_docs = list(collection.find())
     if not video_docs:
@@ -32,34 +37,40 @@ async def send_random_video(client, chat_id):
         return
 
     random_video = random.choice(video_docs)
-    await client.forward_messages(chat_id=chat_id, from_chat_id=int(CHANNEL_ID), message_ids=random_video["message_id"])
+    await client.forward_messages(chat_id=chat_id, from_chat_id=CHANNEL_ID, message_ids=random_video["message_id"])
 
-# ✅ Command to index videos (Owner only)
+# 🔹 Command: `/index` (Indexes videos from the channel)
 @bot.on_message(filters.command("index") & filters.user(OWNER_ID))
 async def index_videos(client, message):
-    await message.reply_text("🔄 Indexing videos... This may take a while.")
+    await message.reply_text("🔄 Ensuring the bot has met the channel...")
 
     try:
-        peer = await client.resolve_peer(CHANNEL_ID)  # ✅ FIX: Use string CHANNEL_ID
-        indexed_count = 0
-        async for msg in client.get_chat_history(peer, limit=1000):
-            if msg.video:
-                collection.update_one(
-                    {"message_id": msg.message_id},
-                    {"$set": {"message_id": msg.message_id}},
-                    upsert=True
-                )
-                indexed_count += 1
-
-        if indexed_count > 0:
-            await message.reply_text(f"✅ Indexing completed! {indexed_count} videos added.")
-        else:
-            await message.reply_text("⚠ No videos found in the channel. Make sure the bot has access!")
+        # ✅ Force the bot to "meet" the channel before indexing
+        chat_info = await client.get_chat(CHANNEL_ID)
+        await message.reply_text(f"✅ Bot has successfully met: {chat_info.title}")
 
     except Exception as e:
-        await message.reply_text(f"❌ Failed to index videos:\n`{str(e)}`")
+        await message.reply_text(f"❌ The bot hasn't met the channel! Fix it first.\n`{str(e)}`")
+        return
 
-# ✅ Start command with inline button
+    await message.reply_text("✅ Now indexing videos...")
+
+    indexed_count = 0
+    async for msg in client.get_chat_history(CHANNEL_ID, limit=1000):
+        if msg.video:
+            collection.update_one(
+                {"message_id": msg.message_id},
+                {"$set": {"message_id": msg.message_id}},
+                upsert=True
+            )
+            indexed_count += 1
+
+    if indexed_count > 0:
+        await message.reply_text(f"✅ Indexing completed! {indexed_count} videos added.")
+    else:
+        await message.reply_text("⚠ No videos found in the channel. Make sure the bot has access!")
+
+# 🔹 Command: `/start`
 @bot.on_message(filters.command("start"))
 async def start(client, message):
     keyboard = InlineKeyboardMarkup([
@@ -67,13 +78,13 @@ async def start(client, message):
     ])
     await message.reply_text("Welcome! Click the button below to get a random video:", reply_markup=keyboard)
 
-# ✅ Inline button to get a random video
+# 🔹 Button: "Get Random Video"
 @bot.on_callback_query(filters.regex("get_random_video"))
 async def random_video_callback(client, callback_query: CallbackQuery):
     await send_random_video(client, callback_query.message.chat.id)
     await callback_query.answer()
 
-# ✅ Start bot with health check
+# 🔹 Run the bot with health check support
 if __name__ == "__main__":
-    threading.Thread(target=start_health_check, daemon=True).start()  # ✅ Fix TCP health check issue
+    threading.Thread(target=start_health_check, daemon=True).start()  # ✅ Start health check
     bot.run()
