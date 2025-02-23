@@ -19,7 +19,7 @@ MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://aarshhub:6L1PAPikOnAIHIRA@clus
 CHANNEL_ID = int(os.getenv("CHANNEL_ID", "-1002492623985"))
 OWNER_ID = int(os.getenv("OWNER_ID", "6860316927"))
 FORCE_SUBSCRIBE = os.getenv("FORCE_SUBSCRIBE", "True").lower() == "true"
-FSUB_CHANNEL_ID = os.getenv("FSUB_CHANNEL_ID", "-100xxxxxxxxx")
+FSUB_CHANNEL_ID = os.getenv("FSUB_CHANNEL_ID", "-1002490575006")
 
 # 🔰 Initialize Bot & Database
 bot = Client("video_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
