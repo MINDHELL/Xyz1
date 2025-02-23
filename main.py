@@ -47,8 +47,8 @@ async def index_videos(client, message):
     for msg in messages:
         if msg and msg.video:
             collection.update_one(
-                {"message_id": msg.message_id},
-                {"$set": {"message_id": msg.message_id}},
+                {"message_id": msg.id},  # ✅ Fixed `msg.id`
+                {"$set": {"message_id": msg.id}}, 
                 upsert=True
             )
             indexed_count += 1
