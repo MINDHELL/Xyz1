@@ -5,6 +5,13 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pymongo import MongoClient
 from health_check import start_health_check
+from bot import Bot
+import pyrogram.utils
+
+pyrogram.utils.MIN_CHANNEL_ID = -1009147483647
+
+if name == "main":
+    Bot().run()
 
 import os
 
