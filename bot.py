@@ -7,6 +7,14 @@ from pymongo import MongoClient
 from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URL, CHANNEL_ID, OWNER_ID
 from health_check import start_health_check
 
+import os
+
+API_ID = int(os.getenv("27788368"))
+API_HASH = os.getenv("9df7e9ef3d7e4145270045e5e43e1081")
+BOT_TOKEN = os.getenv("7725707727:AAFtx6Sy-q6GgB9eaPoN2-oYPx2D6hjnc1g")
+MONGO_URL = os.getenv("mongodb+srv://aarshhub:6L1PAPikOnAIHIRA@cluster0.6shiu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+CHANNEL_ID = int(os.getenv("-1002492623985"))
+OWNER_ID = int(os.getenv("6860316927"))
 # Initialize bot & database
 bot = Client("video_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 mongo = MongoClient(MONGO_URL)
