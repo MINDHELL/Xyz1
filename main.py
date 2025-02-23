@@ -5,6 +5,7 @@ import threading
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pymongo import MongoClient
+from pyrogram.enums import MessagesFilter  # ✅ Import MessagesFilter
 from health_check import start_health_check  # ✅ Health check support
 
 # ✅ Set minimum channel ID to avoid Peer ID issues
@@ -13,7 +14,7 @@ pyrogram.utils.MIN_CHANNEL_ID = -1009147483647
 
 # ✅ Environment Variables
 API_ID = int(os.getenv("API_ID", "27788368"))
-API_HASH = os.getenv("API_HASH", "9df7e9ef3d7e4145270045e5e43e1081")
+API_HASH = os.getenv("API_HASH", "9df7e9ef3d7e4145270045e5e43e1081"))
 BOT_TOKEN = os.getenv("BOT_TOKEN", "7725707727:AAFtx6Sy-q6GgB9eaPoN2-oYPx2D6hjnc1g")
 MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://aarshhub:6L1PAPikOnAIHIRA@cluster0.6shiu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 CHANNEL_ID = int(os.getenv("CHANNEL_ID", "-1002492623985"))
@@ -45,20 +46,25 @@ async def send_random_video(client, chat_id):
         message_ids=random_video["message_id"]
     )
 
-# 🔹 Command: `/index` (Indexes videos via message links)
+# 🔹 Command: `/index` (Indexes videos)
 @bot.on_message(filters.command("index") & filters.user(OWNER_ID))
 async def index_videos(client, message):
     await message.reply_text("🔄 Indexing videos...")
 
-    async for msg in client.search_messages(CHANNEL_ID, filter="video"):
+    indexed_count = 0
+    async for msg in client.search_messages(CHANNEL_ID, filter=MessagesFilter.VIDEO):  # ✅ Fixed filter
         if msg.video:
             collection.update_one(
                 {"message_id": msg.message_id},
                 {"$set": {"message_id": msg.message_id}},
                 upsert=True
             )
-    
-    await message.reply_text(f"✅ Indexing completed!")
+            indexed_count += 1
+
+    await message.reply_text(f"✅ Indexing completed! {indexed_count} videos added.")
+
+    # ✅ Notify the owner with the count of indexed videos
+    await client.send_message(OWNER_ID, f"✅ Indexing completed successfully!\nTotal videos indexed: {indexed_count}")
 
 # 🔹 Command: `/start`
 @bot.on_message(filters.command("start"))
