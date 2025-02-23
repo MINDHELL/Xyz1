@@ -1,17 +1,17 @@
 import os
-import random
 import logging
+import random
 import threading
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pymongo import MongoClient
-from health_check import start_health_check  # ✅ Health check support
+from health_check import start_health_check
 
-# ✅ Set minimum channel ID to avoid Peer ID issues
-import pyrogram.utils
-pyrogram.utils.MIN_CHANNEL_ID = -1009147483647
+# 🔰 Logging Setup
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# ✅ Environment Variables
+# 🔰 Environment Variables
 API_ID = int(os.getenv("API_ID", "27788368"))
 API_HASH = os.getenv("API_HASH", "9df7e9ef3d7e4145270045e5e43e1081")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "7725707727:AAFtx6Sy-q6GgB9eaPoN2-oYPx2D6hjnc1g")
@@ -19,40 +19,33 @@ MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://aarshhub:6L1PAPikOnAIHIRA@clus
 CHANNEL_ID = int(os.getenv("CHANNEL_ID", "-1002492623985"))
 OWNER_ID = int(os.getenv("OWNER_ID", "6860316927"))
 
-# ✅ Initialize bot & database
+# 🔰 Initialize Bot & Database
 bot = Client("video_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 mongo = MongoClient(MONGO_URL)
 db = mongo["VideoBot"]
 collection = db["videos"]
 
-# ✅ Logging setup
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# 🔹 Function to fetch and send a random video
+# 🔰 Function to fetch & send a random video
 async def send_random_video(client, chat_id):
     video_docs = list(collection.find())
     if not video_docs:
         await client.send_message(chat_id, "⚠ No videos available. Use /index first!")
         return
-
     random_video = random.choice(video_docs)
-    
-    # ✅ Forward video instead of fetching messages
-    await client.forward_messages(
-        chat_id=chat_id,
-        from_chat_id=CHANNEL_ID,
-        message_ids=random_video["message_id"]
-    )
+    await client.forward_messages(chat_id=chat_id, from_chat_id=CHANNEL_ID, message_ids=random_video["message_id"])
 
-# 🔹 Command: `/index` (Indexes videos)
+# 🔰 Command to index videos (Owner Only)
 @bot.on_message(filters.command("index") & filters.user(OWNER_ID))
 async def index_videos(client, message):
-    await message.reply_text("🔄 Indexing videos...")
+    await message.reply_text("🔄 Indexing videos... This may take some time.")
 
+    # ✅ Get last 1000 messages safely
     indexed_count = 0
-    async for msg in client.get_chat_history(CHANNEL_ID, limit=1000):  # ✅ Using get_chat_history
-        if msg.video:  # ✅ Filtering videos manually
+    message_ids = list(range(1, 1001))  # Adjust this if needed
+    messages = await client.get_messages(CHANNEL_ID, message_ids)
+
+    for msg in messages:
+        if msg and msg.video:
             collection.update_one(
                 {"message_id": msg.message_id},
                 {"$set": {"message_id": msg.message_id}},
@@ -60,12 +53,13 @@ async def index_videos(client, message):
             )
             indexed_count += 1
 
-    await message.reply_text(f"✅ Indexing completed! {indexed_count} videos added.")
+    if indexed_count > 0:
+        await message.reply_text(f"✅ Indexing completed! {indexed_count} videos added.")
+        await client.send_message(OWNER_ID, f"📢 Successfully indexed {indexed_count} videos!")
+    else:
+        await message.reply_text("⚠ No videos found in the channel. Make sure the bot has access!")
 
-    # ✅ Notify the owner
-    await client.send_message(OWNER_ID, f"✅ Indexing completed!\nTotal videos indexed: {indexed_count}")
-
-# 🔹 Command: `/start`
+# 🔰 Start Command with Inline Button
 @bot.on_message(filters.command("start"))
 async def start(client, message):
     keyboard = InlineKeyboardMarkup([
@@ -73,13 +67,13 @@ async def start(client, message):
     ])
     await message.reply_text("Welcome! Click the button below to get a random video:", reply_markup=keyboard)
 
-# 🔹 Button: "Get Random Video"
+# 🔰 Callback for Random Video
 @bot.on_callback_query(filters.regex("get_random_video"))
 async def random_video_callback(client, callback_query: CallbackQuery):
     await send_random_video(client, callback_query.message.chat.id)
     await callback_query.answer()
 
-# 🔹 Run the bot with health check support
+# 🔰 Run the Bot
 if __name__ == "__main__":
-    threading.Thread(target=start_health_check, daemon=True).start()  # ✅ Start health check
+    threading.Thread(target=start_health_check, daemon=True).start()
     bot.run()
