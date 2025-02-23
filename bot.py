@@ -4,7 +4,6 @@ import threading
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pymongo import MongoClient
-from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URL, CHANNEL_ID, OWNER_ID
 from health_check import start_health_check
 
 import os
