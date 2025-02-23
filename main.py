@@ -45,6 +45,8 @@ async def send_random_video(client, chat_id):
 @bot.on_message(filters.command("index") & filters.user(OWNER_ID))
 async def index_videos(client, message):
     await message.reply_text("🔄 Indexing videos... This may take a while.")
+    try:
+        peer = await client.resolve_peer(CHANNEL_ID)  # ✅ Fix invalid peer ID
     
     indexed_count = 0
     async for msg in client.get_chat_history(CHANNEL_ID, limit=1000):
@@ -61,6 +63,8 @@ async def index_videos(client, message):
         await message.reply_text(f"✅ Indexing completed! {indexed_count} videos added.")
     else:
         await message.reply_text("⚠ No videos found in the channel. Make sure the bot has access!")
+        except Exception as e:
+        await message.reply_text(f"❌ Failed to index videos: {str(e)}")
 
 # ✅ Start command with inline button
 @bot.on_message(filters.command("start"))
