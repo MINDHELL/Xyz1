@@ -12,7 +12,7 @@ API_ID = int(os.getenv("API_ID", "27788368"))
 API_HASH = os.getenv("API_HASH", "9df7e9ef3d7e4145270045e5e43e1081")
 BOT_TOKEN = os.getenv("BOT_TOKEN", "7725707727:AAFtx6Sy-q6GgB9eaPoN2-oYPx2D6hjnc1g")
 MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://aarshhub:6L1PAPikOnAIHIRA@cluster0.6shiu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID", "-1002492623985"))
+CHANNEL_ID = os.getenv("CHANNEL_ID", "-1002492623985")  # 🔹 Keep it as a string
 OWNER_ID = int(os.getenv("OWNER_ID", "6860316927"))
 
 # ✅ Initialize bot & database
@@ -32,7 +32,7 @@ async def send_random_video(client, chat_id):
         return
 
     random_video = random.choice(video_docs)
-    await client.forward_messages(chat_id=chat_id, from_chat_id=CHANNEL_ID, message_ids=random_video["message_id"])
+    await client.forward_messages(chat_id=chat_id, from_chat_id=int(CHANNEL_ID), message_ids=random_video["message_id"])
 
 # ✅ Command to index videos (Owner only)
 @bot.on_message(filters.command("index") & filters.user(OWNER_ID))
@@ -40,7 +40,7 @@ async def index_videos(client, message):
     await message.reply_text("🔄 Indexing videos... This may take a while.")
 
     try:
-        peer = await client.resolve_peer(CHANNEL_ID)  # ✅ Fix invalid peer ID
+        peer = await client.resolve_peer(CHANNEL_ID)  # ✅ FIX: Use string CHANNEL_ID
         indexed_count = 0
         async for msg in client.get_chat_history(peer, limit=1000):
             if msg.video:
@@ -57,7 +57,7 @@ async def index_videos(client, message):
             await message.reply_text("⚠ No videos found in the channel. Make sure the bot has access!")
 
     except Exception as e:
-        await message.reply_text(f"❌ Failed to index videos: {str(e)}")
+        await message.reply_text(f"❌ Failed to index videos:\n`{str(e)}`")
 
 # ✅ Start command with inline button
 @bot.on_message(filters.command("start"))
