@@ -1,1 +1,22 @@
+from pyrogram import Client, filters
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from utils.helpers import generate_verification_link, check_verification
+from config.config import VERIFY_TUTORIAL, BOT_USERNAME
 
+@Client.on_message(filters.command("verify"))
+async def verify(client, message: Message):
+    user_id = message.from_user.id
+    is_verified = await check_verification(user_id)
+
+    if not is_verified:
+        verify_link = await generate_verification_link(user_id)
+        buttons = [[
+            InlineKeyboardButton("✅ Verify Now", url=verify_link)
+        ], [
+            InlineKeyboardButton("📖 How to Verify", url=VERIFY_TUTORIAL)
+        ]]
+
+        await message.reply_text(
+            "🔒 **Verification Required!**\nPlease complete verification to access the bot.",
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
