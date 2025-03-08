@@ -16,7 +16,7 @@ async def start(client, message: Message):
         buttons.append([InlineKeyboardButton("🔔 Join Channel", url=f"https://t.me/{FORCE_SUB_CHANNEL}")])
 
     await message.reply_photo(
-        photo="https://your-image-url.com/welcome.jpg",
+        photo="https://envs.sh/apK.jpg",
         caption="👋 **Welcome!**\n\nSelect an option below:",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
