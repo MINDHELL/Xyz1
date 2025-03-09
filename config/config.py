@@ -1,6 +1,6 @@
 import os
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8064879322:AAFF_Y6RLji-hmwKxzvmZaHnV0FrZ1aPuK4")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8064879322:AAHvYtmZRsRamwHqhgUbXW-yZ5rjHhwdE4A")
 API_ID = int(os.getenv("API_ID", "27788368"))
 API_HASH = os.getenv("API_HASH", "9df7e9ef3d7e4145270045e5e43e1081")
 MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://aarshhub:6L1PAPikOnAIHIRA@cluster0.6shiu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
