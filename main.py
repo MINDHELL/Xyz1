@@ -1,5 +1,16 @@
+from flask import Flask
+from threading import Thread
 from pyrogram import Client
 from config.config import BOT_TOKEN, API_ID, API_HASH
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+def run():
+    app.run(host="0.0.0.0", port=8080)
 
 bot = Client(
     "TelegramBot",
@@ -8,18 +19,6 @@ bot = Client(
     bot_token=BOT_TOKEN
 )
 
-bot.run()
-
-from flask import Flask
-import threading
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Bot is running!", 200
-
-def run_web():
-    app.run(host="0.0.0.0", port=8080)
-
-threading.Thread(target=run_web, daemon=True).start()
+if __name__ == "__main__":
+    Thread(target=run).start()
+    bot.run()
