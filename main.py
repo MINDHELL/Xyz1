@@ -1,24 +1,32 @@
+import os
 from flask import Flask
 from threading import Thread
 from pyrogram import Client
-from config.config import BOT_TOKEN, API_ID, API_HASH
 
-app = Flask(__name__)
+API_ID = int(os.getenv("API_ID"))
+API_HASH = os.getenv("API_HASH")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-@app.route('/')
-def home():
-    return "Bot is running!"
-
-def run():
-    app.run(host="0.0.0.0", port=8080)
-
+# Initialize Pyrogram Bot
 bot = Client(
-    "TelegramBot",
+    "mybot",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN
 )
 
-if __name__ == "__main__":
-    Thread(target=run).start()
-    bot.run()
+# Flask Health Check
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running!", 200
+
+def run_flask():
+    app.run(host="0.0.0.0", port=8080)
+
+# Start Flask in a separate thread
+Thread(target=run_flask).start()
+
+# Run the bot
+bot.run()
