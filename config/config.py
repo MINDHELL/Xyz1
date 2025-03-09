@@ -13,7 +13,7 @@ AUTO_DELETE_TIME = int(os.getenv("AUTO_DELETE_TIME", "20"))  # Time in seconds
 SHORTENER_API = os.getenv("SHORTENER_API", "e753b45153becd850d3142dbdfce442891a7b1d0")
 SHORTENER_URL = os.getenv("SHORTENER_URL", "https://instantearn.in")
 VERIFY_TUTORIAL = os.getenv("VERIFY_TUTORIAL", "https://t.me/public6767/2")
-BOT_USERNAME = os.getenv("BOT_USERNAME", "@Textme001Bot")
+BOT_USERNAME = os.getenv("BOT_USERNAME", "@Textme031Bot")
 
 # Subscription Limits
 NORMAL_LIMIT = 10  # Normal users: 10 videos per day
